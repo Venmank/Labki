@@ -1,9 +1,13 @@
 // Laborat.cpp : Defines the entry point for the console application.
 //
 
+#include <windows.h>
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include <conio.h>
+using namespace std;
+
 #define _KAM_USE_INI_NAME_      0x001
 #define _KAM_USE_INPUT_FILE_    0x002
 #define _KAM_USE_OUTPUT_FILE_   0x004
@@ -16,13 +20,16 @@
 #define COM                     30
 #define FLAGS_COUNT             9
 
+HANDLE hConsole;
+HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
 struct ControleKamStruct
 {
 	unsigned uKamFlags;
-	char *szfIniName;
-	char *szfIName;
-	char *szfOutName;
-	char *szfLogName;
+	char szfIniName[255];
+	char szfInName[255];
+	char szfOutName[255];
+	char szfLogName[255];
 }g_ControlKamFlags;
 
 char*com[COM] =
@@ -45,9 +52,14 @@ char*com[COM] =
 
 };
 
-unsigned Changes = 0;
+unsigned Changes = 0, x = 1, y = 3, leng = 0;
+int RC4_i = 0;
+int RC4_j = 0;
+unsigned char RC4_S[256];
 
 char *MemIni, *MemIn, *MemOut;
+
+unsigned char key[], *pkey = key;
 
 void ChangeIniName();
 void ChangeInName();
@@ -69,9 +81,6 @@ void(*pfn_aFunctions[9])(void)
 	ShowHelp,
 	UseIni,
 	UseCrypto
-
-
-
 };
 
 
@@ -83,12 +92,11 @@ void(*pfn_aFunctions[9])(void)
 int main(int argc, char* argv[])
 {
 	system("cls");
-	setlocale(LC_ALL, "Russian");
-	g_ControlKamFlags.uKamFlags = 280;
-	g_ControlKamFlags.szfIniName = "Ini.txt";
-	g_ControlKamFlags.szfIName = "InPut.txt";
-	g_ControlKamFlags.szfLogName = "log.txt";
-	g_ControlKamFlags.szfOutName = "Out.txt";
+	g_ControlKamFlags.uKamFlags = 32;
+	strcpy(g_ControlKamFlags.szfIniName,"Ini.txt");
+	strcpy(g_ControlKamFlags.szfInName,"InPut.txt");
+	strcpy(g_ControlKamFlags.szfLogName,"log.txt");
+	strcpy(g_ControlKamFlags.szfOutName,"Out.txt");
 
 
 	
@@ -166,7 +174,7 @@ int main(int argc, char* argv[])
 			case 29:g_ControlKamFlags.uKamFlags &= ~_KAM_USE_CRYPTER_;
 				Changes |= 32;
 				break;
-			case 30: std::cout << "ops";
+			case 30: std::cout << "ops\n";
 				break;
 			
 			}
@@ -193,23 +201,22 @@ int main(int argc, char* argv[])
 
 void ChangeIniName()
 {
-	g_ControlKamFlags.szfIniName = MemIni;
+	strcpy(g_ControlKamFlags.szfIniName,MemIni);
 }
 
 void ChangeInName()
 {
-	g_ControlKamFlags.szfIName = MemIn;
+	strcpy(g_ControlKamFlags.szfInName,MemIn);
 }
 
 void ChangeOutName()
 {
-	g_ControlKamFlags.szfOutName = MemOut;
+	strcpy(g_ControlKamFlags.szfOutName,MemOut);
 }
 
 void ShowInfo()
 {
-	setlocale(LC_ALL, "Russian");
-	std::cout << "Разработал программу студент\nКаменев Артем Романович\nГруппа:\nТ3О-103Б-16\n8-999-812-91-98\nРожден 18 лет назад\nВодолей\nА НАСО идут лесом, не хочу я быть козерогом\n";
+	std::cout << "STDUDENT\n";
 	getchar();
 	system("cls");
 	
@@ -224,43 +231,160 @@ void ShowMail()
 
 void ShowMenu()
 {
-	setlocale(LC_ALL, "Russian");
-	std::cout << "Тут должно быть меню\n";
-	getchar();
+	int Menuchange;
+	int i;
+	y = 3, x = 1;
+	unsigned short readKeyCode = 0;
+	while (readKeyCode != 27)
+	{
+		std::cout << "\xC9";
+		for (i = 0; i < 38; i++) std::cout << "\xCD";
+		std::cout << "\xCB";
+		for (i = 0; i < 38; i++) std::cout << "\xCD";
+		std::cout << "\xBB\n\xBA";
+		(x == 0 && y == 0) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Show help (F1)";
+		for (i = 0; i < 22; i++) std::cout << " ";
+		std::cout << "\xBA";
+		(x == 1 && y == 0) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Change input file name";
+		for (i = 0; i < 14; i++) std::cout << " ";
+		std::cout << "\xBA\n\xBA";
+		(x == 0 && y == 1) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Show task info";
+		for (i = 0; i < 22; i++) std::cout << " ";
+		std::cout << "\xBA";
+		(x == 1 && y == 1) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Change output file name";
+		for (i = 0; i < 13; i++) std::cout << " ";
+		std::cout << "\xBA\n\xBA";
+		(x == 0 && y == 2) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Show student info";
+		for (i = 0; i < 19; i++) std::cout << " ";
+		std::cout << "\xBA";
+		(x == 1 && y == 2) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Change key";
+		for (i = 0; i < 26; i++) std::cout << " ";
+		std::cout << "\xBA\n\xBA";
+		(x == 0 && y == 3) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Show student e-mail";
+		for (i = 0; i < 17; i++) std::cout << " ";
+		std::cout << ("\xBA");
+		for (i = 0; i < 38; i++) std::cout << " ";
+		std::cout << "\xBA\n\xBA";
+		for (i = 0; i < 38; i++) std::cout << " ";
+		std::cout << "\xBA";
+		(x == 1 && y == 3) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Exit from menu (ESC)";
+		for (i = 0; i < 16; i++) std::cout << " ";
+		std::cout << "\xBA\n\xBA";
+		(x == 0 && y == 4) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Start task";
+		for (i = 0; i < 26; i++) std::cout << " ";
+		std::cout << "\xBA";
+		(x == 1 && y == 4) ? std::cout << "->" : std::cout << "  ";
+		std::cout << "Exit";
+		for (i = 0; i < 32; i++) std::cout << " ";
+		std::cout << "\xBA\n\xC8";
+		for (i = 0; i < 38; i++) std::cout << "\xCD";
+		std::cout << "\xCA";
+		for (i = 0; i < 38; i++) std::cout << "\xCD";
+		std::cout << "\xBC";
+
+		readKeyCode = getch();
+		switch (readKeyCode)
+		{
+		case 72:y == 0 ? y += 4 : y -= 1;
+			break;
+		case 80:y = (y + 1) % 5;
+			break;
+		case 75:x == 0 < 0 ? x += 1 : x -= 1;
+			break;
+		case 77:x = (x + 1) % 2;
+			break;
+		case 13:Menuchange = y * 2 + x;
+			switch (Menuchange)
+			{
+			case 0:ShowHelp();
+				break;
+			case 1:system("cls");
+				std::cout << "New Input file: ";
+				std::cin >> g_ControlKamFlags.szfInName; 
+				break;
+			case 2:ShowHelp();
+				break;
+			case 3:system("cls");
+				std::cout << "New Output file: ";
+				std::cin >> g_ControlKamFlags.szfOutName;
+				break;
+			case 4:ShowInfo();
+				break;
+			case 5:system("cls");
+				std::cout << "New key: ";
+				std::cin >> key;
+				leng = strlen(key);
+				break;
+			case 6:ShowMail();
+				break;
+			case 7:readKeyCode = 27;
+				break;
+			case 8:UseCrypto();
+				break;
+			case 9:exit;
+				break;
+			}
+
+		}
+		system("cls");
+
+	}
 	system("cls");
 }
 
 
 void ShowHelp()
 {
-	setlocale(LC_ALL, "Russian");
-	std::cout << "А тут вся инфа что как\n";
+	std::cout << "Info\n";
 	getchar();
 	system("cls");
 }
 
 void UseIni()
 {
-	setlocale(LC_ALL, "Russian");
-	std::cout << "Тут реализация инициализации\n";
+	std::cout << "Ini\n";
 	getchar();
 	system("cls");
 }
 
 void UseCrypto()
 {
-	char S[256];
-	int x = 0, y = 0;
-	
-	setlocale(LC_ALL, "Russian");
-	std::cout << "И собственно сама шифровка\n";
-	std::string key;
-	std::getline(std::cin, key);
-	int KeyLen = key.length;
-	for (int i = 0; i < 256; i++)
-	{
-		S[i] = i;
-	}
-	getchar();
+
+	RC4_InitKey(pkey,leng);
+
+
+
+
 	system("cls");
+}
+
+
+
+void __fastcall RC4_InitKey(unsigned char* Key, int KeyLength)
+{
+	RC4_i = 0;
+	RC4_j = 0;
+	for (int i = 0; i<256; i++)
+	{
+		RC4_S[i] = i;
+	}
+
+	int j = 0;
+	for (int i = 0; i<256; i++)
+	{
+		j = (j + Key[i % KeyLength] + RC4_S[i]) % 256;
+
+		unsigned char temp = RC4_S[i];
+		RC4_S[i] = RC4_S[j];
+		RC4_S[j] = temp;
+	}
 }
