@@ -322,7 +322,7 @@ void ShowMenu()
 			case 5:system("cls");
 				std::cout << "New key: ";
 				std::cin >> key;
-				leng = strlen(key);
+				//!!!
 				break;
 			case 6:ShowMail();
 				break;
@@ -359,7 +359,6 @@ void UseIni()
 void UseCrypto()
 {
 
-	RC4_InitKey(pkey,leng);
 
 
 
