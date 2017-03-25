@@ -58,8 +58,7 @@ int RC4_j = 0;
 unsigned char RC4_S[256];
 
 char *MemIni, *MemIn, *MemOut;
-
-unsigned char key[], *pkey = key;
+char keyRC4[256], *pkey = keyRC4;
 
 void ChangeIniName();
 void ChangeInName();
@@ -70,6 +69,8 @@ void ShowMenu();
 void ShowHelp();
 void UseIni();
 void UseCrypto();
+void RC4_InitKey();
+unsigned char RC4_Transform(unsigned char nextByte);
 void(*pfn_aFunctions[9])(void)
 {
 	ChangeIniName,
@@ -93,11 +94,13 @@ int main(int argc, char* argv[])
 {
 	system("cls");
 	g_ControlKamFlags.uKamFlags = 32;
-	strcpy(g_ControlKamFlags.szfIniName,"Ini.txt");
-	strcpy(g_ControlKamFlags.szfInName,"InPut.txt");
-	strcpy(g_ControlKamFlags.szfLogName,"log.txt");
-	strcpy(g_ControlKamFlags.szfOutName,"Out.txt");
-
+	strcpy_s(g_ControlKamFlags.szfIniName,"I.txt");
+	strcpy_s(g_ControlKamFlags.szfInName,"Out.txt");
+	strcpy_s(g_ControlKamFlags.szfLogName,"log.txt");
+	strcpy_s(g_ControlKamFlags.szfOutName, "Out2.txt");
+	strcpy_s(keyRC4, "KeyKeyKey");
+	leng = strlen(pkey);
+	 
 
 	
 
@@ -201,17 +204,17 @@ int main(int argc, char* argv[])
 
 void ChangeIniName()
 {
-	strcpy(g_ControlKamFlags.szfIniName,MemIni);
+	strcpy_s(g_ControlKamFlags.szfIniName,MemIni);
 }
 
 void ChangeInName()
 {
-	strcpy(g_ControlKamFlags.szfInName,MemIn);
+	strcpy_s(g_ControlKamFlags.szfInName,MemIn);
 }
 
 void ChangeOutName()
 {
-	strcpy(g_ControlKamFlags.szfOutName,MemOut);
+	strcpy_s(g_ControlKamFlags.szfOutName,MemOut);
 }
 
 void ShowInfo()
@@ -291,7 +294,7 @@ void ShowMenu()
 		for (i = 0; i < 38; i++) std::cout << "\xCD";
 		std::cout << "\xBC";
 
-		readKeyCode = getch();
+		readKeyCode = _getch();
 		switch (readKeyCode)
 		{
 		case 72:y == 0 ? y += 4 : y -= 1;
@@ -321,7 +324,7 @@ void ShowMenu()
 				break;
 			case 5:system("cls");
 				std::cout << "New key: ";
-				std::cin >> key;
+				std::cin >> keyRC4;
 				//!!!
 				break;
 			case 6:ShowMail();
@@ -330,7 +333,7 @@ void ShowMenu()
 				break;
 			case 8:UseCrypto();
 				break;
-			case 9:exit;
+			case 9:exit(0);
 				break;
 			}
 
@@ -358,17 +361,35 @@ void UseIni()
 
 void UseCrypto()
 {
+	unsigned char *bytein, *byteout;
+	FILE *fin = fopen(g_ControlKamFlags.szfInName, "r"), *fout = fopen(g_ControlKamFlags.szfOutName, "a+b");
+	if (fin == NULL) {
+		puts("Cannot open InPut file .\n");
+		getchar();
+		exit(1);
+	}
+	if (fout == NULL) {
+		puts("Cannot open OutPut file .\n");
+		getchar();
+		exit(1);
+	}
+	RC4_InitKey();
+	while (feof(fin))
+	{
+		*bytein = fgetc(fin);
 
+		*byteout = RC4_Transform((unsigned char)*bytein);
+		fputc(*byteout,fout);
 
+	}
+	fclose(fin);
 
-
-
+	fclose(fout);
+	getchar();
 	system("cls");
 }
 
-
-
-void __fastcall RC4_InitKey(unsigned char* Key, int KeyLength)
+void RC4_InitKey()
 {
 	RC4_i = 0;
 	RC4_j = 0;
@@ -380,10 +401,22 @@ void __fastcall RC4_InitKey(unsigned char* Key, int KeyLength)
 	int j = 0;
 	for (int i = 0; i<256; i++)
 	{
-		j = (j + Key[i % KeyLength] + RC4_S[i]) % 256;
+		j = (j + (unsigned char)keyRC4[i % leng] + RC4_S[i]) % 256;
 
 		unsigned char temp = RC4_S[i];
 		RC4_S[i] = RC4_S[j];
 		RC4_S[j] = temp;
 	}
 }
+
+unsigned char RC4_Transform(unsigned char nextByte)
+{
+	RC4_i = (RC4_i + 1) % 256;
+	RC4_j = (RC4_j + RC4_S[RC4_i]) % 256;
+	unsigned char temp = RC4_S[RC4_i];
+	RC4_S[RC4_i] = RC4_S[RC4_j];
+	RC4_S[RC4_j] = temp;
+
+	return nextByte ^ RC4_S[temp];
+}
+
