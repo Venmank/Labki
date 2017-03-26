@@ -96,9 +96,9 @@ int main(int argc, char* argv[])
 	system("cls");
 	g_ControlKamFlags.uKamFlags = 32;
 	strcpy_s(g_ControlKamFlags.szfIniName,"I.txt");
-	strcpy_s(g_ControlKamFlags.szfInName,"Text.txt");
+	strcpy_s(g_ControlKamFlags.szfInName,"Out.jpg");
 	strcpy_s(g_ControlKamFlags.szfLogName,"log.txt");
-	strcpy_s(g_ControlKamFlags.szfOutName, "Out.txt");
+	strcpy_s(g_ControlKamFlags.szfOutName, "Out2.jpg");
 	strcpy_s(keyRC4, "Key1");
 	leng = strlen(pkey);
 	 
@@ -361,35 +361,37 @@ void UseIni()
 
 void UseCrypto()
 {
-	unsigned char bytein, byteout;
-	FILE *fin, *fout;
-
-	if (!fin.is_open() && !fin.is_open())
+	FILE *fin = fopen(g_ControlKamFlags.szfInName, "r"), *fout = fopen(g_ControlKamFlags.szfOutName, "w+");
+	RC4_InitKey();
+	if (fin == NULL | fout == NULL)
 	{
 		cout << "Cannot open InPut and/or OutPut file.\n";
 	getchar();
 	}
 	else
 	{
-
+		int result;
 		unsigned char buffer[4096];
-
+		
 		while (true)
 		{
-			fread(fin, buffer, 4096, &readed, NULL);
-			if (readed == 0) break;
-			for (int i = 0; i<readed; i++)
+			result = fread(buffer, 1, 4096, fin);
+			if (result == 0) break;
+			for (int i = 0; i<result; i++)
 				buffer[i] = RC4_Transform(buffer[i]);
-			WriteFile(fout, buffer, readed, &written, NULL);
+			fwrite(buffer, 1, result, fout);
 		}
+
+		
+	fclose(fin);
+	fclose(fout);
 	}
-	fin.close();
-	fout.close();
 	system("cls");
 }
 
 void RC4_InitKey()
 {
+
 	for (int i = 0; i<256; i++)
 	{
 		RC4_S[i] = i;
