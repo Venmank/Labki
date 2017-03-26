@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <string>
 #include <conio.h>
+#include <fstream>
 using namespace std;
 
 #define _KAM_USE_INI_NAME_      0x001
@@ -95,10 +96,10 @@ int main(int argc, char* argv[])
 	system("cls");
 	g_ControlKamFlags.uKamFlags = 32;
 	strcpy_s(g_ControlKamFlags.szfIniName,"I.txt");
-	strcpy_s(g_ControlKamFlags.szfInName,"Out.txt");
+	strcpy_s(g_ControlKamFlags.szfInName,"Text.txt");
 	strcpy_s(g_ControlKamFlags.szfLogName,"log.txt");
-	strcpy_s(g_ControlKamFlags.szfOutName, "Out2.txt");
-	strcpy_s(keyRC4, "KeyKeyKey");
+	strcpy_s(g_ControlKamFlags.szfOutName, "Out.txt");
+	strcpy_s(keyRC4, "Key1");
 	leng = strlen(pkey);
 	 
 
@@ -292,7 +293,7 @@ void ShowMenu()
 		for (i = 0; i < 38; i++) std::cout << "\xCD";
 		std::cout << "\xCA";
 		for (i = 0; i < 38; i++) std::cout << "\xCD";
-		std::cout << "\xBC";
+		std::cout << "\xBC\n";
 
 		readKeyCode = _getch();
 		switch (readKeyCode)
@@ -324,8 +325,7 @@ void ShowMenu()
 				break;
 			case 5:system("cls");
 				std::cout << "New key: ";
-				std::cin >> keyRC4;
-				//!!!
+				leng = strlen(pkey);
 				break;
 			case 6:ShowMail();
 				break;
@@ -361,38 +361,35 @@ void UseIni()
 
 void UseCrypto()
 {
-	unsigned char *bytein, *byteout;
-	FILE *fin = fopen(g_ControlKamFlags.szfInName, "r"), *fout = fopen(g_ControlKamFlags.szfOutName, "a+b");
-	if (fin == NULL) {
-		puts("Cannot open InPut file .\n");
-		getchar();
-		exit(1);
-	}
-	if (fout == NULL) {
-		puts("Cannot open OutPut file .\n");
-		getchar();
-		exit(1);
-	}
-	RC4_InitKey();
-	while (feof(fin))
+	unsigned char bytein, byteout;
+	FILE *fin, *fout;
+
+	if (!fin.is_open() && !fin.is_open())
 	{
-		*bytein = fgetc(fin);
-
-		*byteout = RC4_Transform((unsigned char)*bytein);
-		fputc(*byteout,fout);
-
-	}
-	fclose(fin);
-
-	fclose(fout);
+		cout << "Cannot open InPut and/or OutPut file.\n";
 	getchar();
+	}
+	else
+	{
+
+		unsigned char buffer[4096];
+
+		while (true)
+		{
+			fread(fin, buffer, 4096, &readed, NULL);
+			if (readed == 0) break;
+			for (int i = 0; i<readed; i++)
+				buffer[i] = RC4_Transform(buffer[i]);
+			WriteFile(fout, buffer, readed, &written, NULL);
+		}
+	}
+	fin.close();
+	fout.close();
 	system("cls");
 }
 
 void RC4_InitKey()
 {
-	RC4_i = 0;
-	RC4_j = 0;
 	for (int i = 0; i<256; i++)
 	{
 		RC4_S[i] = i;
@@ -416,6 +413,7 @@ unsigned char RC4_Transform(unsigned char nextByte)
 	unsigned char temp = RC4_S[RC4_i];
 	RC4_S[RC4_i] = RC4_S[RC4_j];
 	RC4_S[RC4_j] = temp;
+	temp = (RC4_S[RC4_i] + RC4_S[RC4_j]) % 256;
 
 	return nextByte ^ RC4_S[temp];
 }
